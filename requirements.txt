@@ -1,0 +1,5 @@
+opencv-python
+numpy
+face_recognition
+# dlib é uma dependência do face_recognition, geralmente instalado automaticamente.
+# Se houver problemas na instalação do dlib, pode ser necessário instalar dependências do sistema no Dockerfile.
