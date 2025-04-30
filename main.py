@@ -2,26 +2,26 @@ import cv2
 import numpy as np
 import face_recognition
 import time
-import datetime # Importado para timestamp
-import os       # Importado para criar diretório
+import datetime  # Imported for timestamp
+import os        # Imported to create directory
 
-# --- Configurações ---
-IP_CAMERA_URL = "http://192.168.1.66:8080/video"  # URL da sua câmera IP
+# --- Settings ---
+IP_CAMERA_URL = "http://192.168.1.66:8080/video"  # URL of your IP camera
 KNOWN_FACES_DATA = [
-    ("Pessoa 1", "Morty.png"), # Certifique-se que este arquivo existe
-    # ("Nome da Pessoa 2", "caminho/para/imagem2.jpg"),
+    ("Pessoa 1", "Morty.png"),  # Make sure this file exists
+    # ("Person Name 2", "path/to/image2.jpg"),
 ]
 RESIZE_FACTOR = 0.5
 TOLERANCE = 0.6
-OUTPUT_DIR = "detected_faces_output" # Diretório para salvar as imagens
+OUTPUT_DIR = "detected_faces_output"  # Directory to save images
 
-# --- Função para Carregar Faces Conhecidas ---
-# (Nenhuma alteração necessária nesta função)
+# --- Function to Load Known Faces ---
+# (No changes needed in this function)
 def load_known_faces(known_faces_data: list) -> tuple[list, list]:
-    """Carrega codificações de faces e nomes a partir de arquivos de imagem."""
+    """Loads face encodings and names from image files."""
     known_face_encodings = []
     known_face_names = []
-    print("Carregando faces conhecidas...")
+    print("Loading known faces...")
     for name, image_path in known_faces_data:
         try:
             image = face_recognition.load_image_file(image_path)
@@ -29,48 +29,48 @@ def load_known_faces(known_faces_data: list) -> tuple[list, list]:
             if len(encodings) == 1:
                 known_face_encodings.append(encodings[0])
                 known_face_names.append(name)
-                print(f"  [OK] Rosto de '{name}' carregado de '{image_path}'")
+                print(f"  [OK] Face of '{name}' loaded from '{image_path}'")
             elif len(encodings) > 1:
-                print(f"  [AVISO] Mais de um rosto encontrado em '{image_path}'. Usando o primeiro.")
+                print(f"  [WARNING] More than one face found in '{image_path}'. Using the first one.")
                 known_face_encodings.append(encodings[0])
                 known_face_names.append(name)
             else:
-                print(f"  [ERRO] Nenhum rosto encontrado em '{image_path}'. Imagem ignorada.")
+                print(f"  [ERROR] No face found in '{image_path}'. Image ignored.")
         except FileNotFoundError:
-            print(f"  [ERRO] Arquivo de imagem não encontrado em '{image_path}'. Verifique o caminho.")
+            print(f"  [ERROR] Image file not found at '{image_path}'. Check the path.")
         except Exception as e:
-            print(f"  [ERRO] Ocorreu um erro ao carregar '{image_path}': {e}")
+            print(f"  [ERROR] An error occurred while loading '{image_path}': {e}")
     if not known_face_names:
-        print("\nAVISO: Nenhuma face conhecida foi carregada com sucesso.")
+        print("\nWARNING: No known face was successfully loaded.")
     else:
-        print(f"\nCarregamento concluído. {len(known_face_names)} face(s) conhecida(s) pronta(s).")
+        print(f"\nLoading complete. {len(known_face_names)} known face(s) ready.")
     return known_face_encodings, known_face_names
 
-# --- Função para Processar um Único Frame ---
-# Modificada para retornar também o conjunto de nomes detectados
+# --- Function to Process a Single Frame ---
+# Modified to also return the set of detected names
 def process_frame(frame: np.ndarray, known_face_encodings: list, known_face_names: list) -> tuple[np.ndarray, set]:
-    """Detecta e reconhece faces em um frame de vídeo e retorna o frame anotado e um conjunto de nomes detectados."""
+    """Detects and recognizes faces in a video frame and returns the annotated frame and a set of detected names."""
 
-    detected_names_in_frame = set() # Conjunto para armazenar nomes neste frame
-    processed_frame = frame.copy() # Trabalha com uma cópia para desenhar
+    detected_names_in_frame = set()  # Set to store names in this frame
+    processed_frame = frame.copy()   # Work on a copy for drawing
 
-    # 1. Redimensiona (se necessário)
+    # 1. Resize (if needed)
     if RESIZE_FACTOR != 1.0:
         small_frame = cv2.resize(frame, (0, 0), fx=RESIZE_FACTOR, fy=RESIZE_FACTOR)
     else:
-        small_frame = processed_frame # Usa a cópia se não redimensionar
+        small_frame = processed_frame  # Use the copy if not resizing
 
-    # 2. Converte BGR -> RGB
+    # 2. Convert BGR -> RGB
     rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
-    # 3. Encontra faces e codificações
+    # 3. Find faces and encodings
     face_locations = face_recognition.face_locations(rgb_small_frame)
     face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-    # 4. Itera sobre cada face encontrada
+    # 4. Iterate over each found face
     for face_encoding, face_location in zip(face_encodings, face_locations):
         matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=TOLERANCE)
-        name = "Desconhecido"
+        name = "Unknown"
         color = (0, 0, 255)
 
         face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
@@ -79,14 +79,14 @@ def process_frame(frame: np.ndarray, known_face_encodings: list, known_face_name
             if matches[best_match_index]:
                 name = known_face_names[best_match_index]
                 color = (0, 255, 0)
-                # print(f"Status: Pessoa Reconhecida - {name}") # Mantido para debug se quiser
+                # print(f"Status: Recognized Person - {name}")  # Kept for debug if needed
             # else:
-                # print("Status: Pessoa Detectada - Desconhecida") # Mantido para debug se quiser
+                # print("Status: Detected Person - Unknown")  # Kept for debug if needed
 
-        # Adiciona o nome (conhecido ou "Desconhecido") ao conjunto do frame atual
+        # Add the name (known or "Unknown") to the set for the current frame
         detected_names_in_frame.add(name)
 
-        # 5. Re-escala coordenadas
+        # 5. Rescale coordinates
         top, right, bottom, left = face_location
         if RESIZE_FACTOR != 1.0:
             top = int(top / RESIZE_FACTOR)
@@ -94,116 +94,115 @@ def process_frame(frame: np.ndarray, known_face_encodings: list, known_face_name
             bottom = int(bottom / RESIZE_FACTOR)
             left = int(left / RESIZE_FACTOR)
 
-        # 6. Desenha no frame *processado*
+        # 6. Draw on the *processed* frame
         cv2.rectangle(processed_frame, (left, top), (right, bottom), color, 2)
         cv2.rectangle(processed_frame, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(processed_frame, name, (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
 
-    # Retorna o frame com desenhos E o conjunto de nomes detectados nele
+    # Return the drawn frame AND the set of names detected in it
     return processed_frame, detected_names_in_frame
 
-# --- Função Principal ---
+# --- Main Function ---
 def main():
-    # Carrega as faces conhecidas
+    # Load known faces
     known_encodings, known_names = load_known_faces(KNOWN_FACES_DATA)
 
-    # Cria o diretório de saída se não existir
+    # Create output directory if it doesn't exist
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    print(f"Imagens de novas detecções serão salvas em: '{OUTPUT_DIR}'")
+    print(f"Images of new detections will be saved in: '{OUTPUT_DIR}'")
 
-    # Inicializa a captura de vídeo
-    print(f"\nTentando conectar à câmera IP: {IP_CAMERA_URL}...")
+    # Initialize video capture
+    print(f"\nTrying to connect to IP camera: {IP_CAMERA_URL}...")
     cap = cv2.VideoCapture(IP_CAMERA_URL)
 
     if not cap.isOpened():
         print("-" * 40)
-        print(f"ERRO CRÍTICO: Não foi possível abrir o stream de vídeo.")
-        # ... (mensagens de erro detalhadas) ...
+        print(f"CRITICAL ERROR: Unable to open video stream.")
+        # ... (detailed error messages) ...
         print("-" * 40)
         return
 
-    print("Câmera conectada com sucesso! Iniciando o reconhecimento...")
-    # Adicione esta linha se for rodar com GUI (se não, ignore ou comente)
-    # print("Pressione 'q' na janela de vídeo para sair.")
+    print("Camera successfully connected! Starting recognition...")
+    # Add this line if running with GUI (if not, ignore or comment out)
+    # print("Press 'q' in the video window to quit.")
 
-    # Variável para rastrear faces vistas no *frame anterior*
+    # Variable to track faces seen in the *previous frame*
     previous_faces_seen = set()
 
-    # Verifica se a GUI deve ser desabilitada (útil para Docker sem display)
+    # Check if GUI should be disabled (useful for Docker without display)
     DISABLE_GUI = os.environ.get('DISABLE_GUI', 'false').lower() == 'true'
     if DISABLE_GUI:
-        print("Modo sem GUI ativado (via variável de ambiente DISABLE_GUI).")
+        print("Headless mode activated (via DISABLE_GUI environment variable).")
     else:
-        print("Pressione 'q' na janela de vídeo para sair.")
-
+        print("Press 'q' in the video window to exit.")
 
     while True:
-        # Captura frame por frame (guardamos o original)
+        # Capture frame by frame (keep the original)
         ret, original_frame = cap.read()
 
         if not ret or original_frame is None:
-            print("Erro ao capturar frame ou stream finalizado.")
-            # ... (lógica de reconexão) ...
-            # (código de reconexão omitido para brevidade, mantenha o seu se necessário)
-            print("Tentando reconectar em 5 segundos...") # Exemplo simples
+            print("Error capturing frame or stream ended.")
+            # ... (reconnection logic) ...
+            # (reconnection code omitted for brevity, keep your own if needed)
+            print("Trying to reconnect in 5 seconds...")  # Simple example
             time.sleep(5)
-            # Tentar reabrir aqui ou quebrar o loop
-            # Para simplificar, vamos quebrar por agora:
-            break # Sai do loop se não conseguir ler o frame
+            # Try to reopen here or break the loop
+            # For simplicity, we'll break for now:
+            break  # Exit loop if unable to read the frame
 
-        # Processa o frame (recebe o frame anotado e o conjunto de nomes atuais)
+        # Process the frame (receive annotated frame and current names set)
         processed_frame, current_faces_seen = process_frame(
             original_frame, known_encodings, known_names
         )
 
-        # --- Lógica para Salvar Imagem em Nova Detecção ---
-        # Compara o conjunto atual com o anterior para encontrar novas aparições
+        # --- Logic to Save Image on New Detection ---
+        # Compare current set with previous to find new appearances
         newly_appeared_faces = current_faces_seen - previous_faces_seen
 
         if newly_appeared_faces:
-            # Gera um timestamp único para este momento de detecção
-            # Inclui microssegundos para evitar colisões se várias faces aparecerem no mesmo segundo
+            # Generate a unique timestamp for this detection moment
+            # Includes microseconds to avoid collisions if multiple faces appear at the same second
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 
-            # Itera sobre cada *nome distinto* que acabou de aparecer
+            # Iterate over each *distinct name* that just appeared
             for name in newly_appeared_faces:
-                if name == "Desconhecido":
+                if name == "Unknown":
                     prefix = "person_unknown"
-                    print(f"Status: Nova pessoa DESCONHECIDA detectada.")
+                    print(f"Status: New UNKNOWN person detected.")
                 else:
                     prefix = "person_known"
-                    print(f"Status: Nova detecção da pessoa CONHECIDA: {name}")
+                    print(f"Status: New detection of KNOWN person: {name}")
 
-                # Monta o nome do arquivo
+                # Build the filename
                 filename = os.path.join(OUTPUT_DIR, f"{prefix}-{timestamp}.png")
 
-                # Salva o frame *original* (sem as anotações)
+                # Save the *original* frame (without annotations)
                 try:
                     cv2.imwrite(filename, original_frame)
-                    print(f"  >> Imagem salva: {filename}")
+                    print(f"  >> Image saved: {filename}")
                 except Exception as e:
-                    print(f"  [ERRO] Falha ao salvar a imagem {filename}: {e}")
+                    print(f"  [ERROR] Failed to save image {filename}: {e}")
 
-        # Atualiza o conjunto de faces vistas para a próxima iteração
+        # Update the set of faces seen for the next iteration
         previous_faces_seen = current_faces_seen
-        # --- Fim da Lógica de Salvar Imagem ---
+        # --- End of Image Saving Logic ---
 
-        # Mostra o frame resultante (APENAS se a GUI não estiver desabilitada)
+        # Show the resulting frame (ONLY if GUI is not disabled)
         if not DISABLE_GUI:
-            cv2.imshow('Reconhecimento Facial (IP Camera) - Pressione Q para sair', processed_frame)
+            cv2.imshow('Face Recognition (IP Camera) - Press Q to Exit', processed_frame)
 
-            # Verifica a tecla 'q' (APENAS se a GUI estiver ativa)
+            # Check for 'q' key (ONLY if GUI is active)
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                print("Tecla 'q' pressionada. Encerrando...")
+                print("Key 'q' pressed. Exiting...")
                 break
 
-    # Libera recursos
+    # Release resources
     cap.release()
     if not DISABLE_GUI:
         cv2.destroyAllWindows()
-    print("Recursos liberados. Programa finalizado.")
+    print("Resources released. Program finished.")
 
-# --- Ponto de Entrada ---
+# --- Entry Point ---
 if __name__ == '__main__':
     main()

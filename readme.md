@@ -46,11 +46,22 @@ Each image should show **one clear face**, facing forward.
 If a GUI is available, a window will open. Press **q** to quit.
 
 ### 🐳 Docker (Headless Option)
+
 1. Build the Docker image:
-    docker build -t face-recognition-app .
+```bash
+docker build -t face-recognition-app .
+```
+
 2. Run the container:
-    docker run --rm -e DISABLE_GUI=true face-recognition-app
+```bash
+docker run --rm \
+  -e DISABLE_GUI=true \
+  -v $(pwd)/detected_faces_output:/app/detected_faces_output \
+  face-recognition-app
+```
+
 The `DISABLE_GUI=true` flag disables OpenCV display windows, which is useful when running on servers or containers without a graphical interface.
+
 
 ## 📤 Output
 By default, whenever a new person appears in the video (known or unknown), a snapshot of the full original frame is saved to the `detected_faces_output/` directory with a timestamp. You can extend the logic in **main.py** to:
