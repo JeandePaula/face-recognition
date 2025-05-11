@@ -83,7 +83,7 @@ All dependencies are listed in **requirements.txt**:
 - If the system fails to detect faces or misidentifies them frequently, adjust the `TOLERANCE` or improve the training images.
 
 ## 📄 License
-This project is distributed for educational and personal use only. You are free to modify and adapt it as needed.
+This project is open-sourced software licensed under the [MIT license](LICENSE).
 
 ## 🙋 Author
 Developed by **Jean de Paula**. Feel free to contribute or adapt to your own use case!
