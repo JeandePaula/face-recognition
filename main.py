@@ -161,12 +161,10 @@ def main():
         newly_appeared_faces = current_faces_seen - previous_faces_seen
 
         if newly_appeared_faces:
-            # Generate a unique timestamp for this detection moment
-            # Includes microseconds to avoid collisions if multiple faces appear at the same second
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-
             # Iterate over each *distinct name* that just appeared
             for name in newly_appeared_faces:
+                # Generate a timestamp for this face (microseconds ensure uniqueness)
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                 if name == "Unknown":
                     prefix = "person_unknown"
                     print(f"Status: New UNKNOWN person detected.")
@@ -174,8 +172,9 @@ def main():
                     prefix = "person_known"
                     print(f"Status: New detection of KNOWN person: {name}")
 
-                # Build the filename
-                filename = os.path.join(OUTPUT_DIR, f"{prefix}-{timestamp}.png")
+                # Build the filename, including the name to avoid collisions
+                safe_name = name.replace(" ", "_") if name != "Unknown" else "unknown"
+                filename = os.path.join(OUTPUT_DIR, f"{prefix}-{safe_name}-{timestamp}.png")
 
                 # Save the *original* frame (without annotations)
                 try:
