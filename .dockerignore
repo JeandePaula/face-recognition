@@ -1,0 +1,14 @@
+.git
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+.cache
+.env
+config.toml
+models
+known_faces
+detected_faces_output
+output_local
+tests
+dist

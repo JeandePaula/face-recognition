@@ -1,0 +1,14 @@
+# Copy to config.toml. Paths below are relative to that file.
+# Use FACE_SOURCE for camera URLs containing credentials.
+source = 0 # Webcam index, video file path, or http(s)/rtsp URL
+known_faces_dir = "known_faces"
+models_dir = "models"
+output_dir = "detected_faces_output"
+headless = true # false opens an OpenCV window; Q exits
+resize_factor = 0.5
+detection_threshold = 0.9
+match_threshold = 0.363 # Higher = stricter; this is cosine similarity, not old TOLERANCE
+snapshot_cooldown = 10.0 # Minimum seconds between snapshots of the same label
+reconnect_attempts = 5
+reconnect_delay = 2.0
+timeout_ms = 5000 # FFmpeg network open/read timeout

@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling>=1.32.4,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "camera-face-recognition"
+version = "2.0.0"
+description = "Simple, local camera face recognition with OpenCV YuNet and SFace"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Jean de Paula" }]
+dependencies = ["numpy>=2.5.3,<3", "opencv-python>=5.0.0.93,<6"]
+
+[project.scripts]
+face-camera = "face_camera.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=9.1.1,<10", "ruff>=0.16.10,<0.17"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/face_camera"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = ["integration: real ONNX inference (requires downloaded models)"]
