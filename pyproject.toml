@@ -16,7 +16,7 @@ dependencies = ["numpy>=2.5.3,<3", "opencv-python>=5.0.0.93,<6"]
 face-camera = "face_camera.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=9.1.1,<10", "ruff>=0.16.10,<0.17"]
+dev = ["pytest>=9.1.1,<10", "ruff>=0.16.10,<0.18"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/face_camera"]
